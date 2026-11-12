@@ -1,5 +1,7 @@
 # Trim Tracker
 
+<img src="media/logo.png" alt="Trim Tracker logo" width="128" align="right">
+
 A small WoW Forever addon that tidies up the quest tracker.
 
 - Hides the "All Objectives" header.
