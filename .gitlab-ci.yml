@@ -3,16 +3,13 @@
 # github-sync: every push to main is copied to GitHub.
 # package:     a version tag such as v1.2.3
 #   1. is pushed to GitHub,
-#   2. is built with the BigWigs packager (https://github.com/BigWigsMods/packager) into a
-#      CurseForge-format zip (<Addon>-<tag>-forever.zip, addon folder at the root), and the packager
-#      publishes the GitHub release with release.json,
+#   2. is built with the BigWigs packager (https://github.com/BigWigsMods/packager) into
+#      <Addon>-<tag>-forever.zip (addon folder at the root), and the packager publishes the GitHub
+#      release with release.json. Wago imports that GitHub release through its GitHub webhook.
 #   3. gets a GitLab release with the same zip and release.json, for the WowUp Hub.
 #
-# The zip can be uploaded to CurseForge by hand as-is (game version: Forever). For automatic
-# CurseForge uploads, add "## X-Curse-Project-ID: <id>" to the toc and a CF_API_TOKEN variable.
-#
 # CI/CD variables (masked, NOT protected): GH_API_TOKEN (GitHub token with Contents read/write on the
-# mirror). Optional: CF_API_TOKEN. Without one, that step is skipped.
+# mirror). Without it, the GitHub steps are skipped.
 
 variables:
   GITHUB_REPO: "doc-biddle/$CI_PROJECT_NAME"
