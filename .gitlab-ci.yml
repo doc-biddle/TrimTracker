@@ -44,9 +44,10 @@ package:
       bash /tmp/release.sh
 
       # Wago imports GitHub releases from webhook events, but the packager publishes the release before
-      # attaching the zip. Update the release once more now that the files are there, so Wago gets a
-      # release event it can import from.
+      # attaching the zip, and Wago seems to ignore further events for a release that arrive right after
+      # the first one. Wait a few minutes, then update the release so Wago gets an event with the files.
       if [ -n "${GH_API_TOKEN:-}" ]; then
+        sleep 180
         GH_API="https://api.github.com/repos/${GITHUB_REPO}/releases"
         REL_ID=$(curl -sSf -H "Authorization: Bearer $GH_API_TOKEN" "$GH_API/tags/$CI_COMMIT_TAG" | jq -r .id)
         curl -sSf -o /dev/null -X PATCH -H "Authorization: Bearer $GH_API_TOKEN" -H "Accept: application/vnd.github+json" \
