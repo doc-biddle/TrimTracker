@@ -3,6 +3,18 @@
 Versions follow semantic versioning: MAJOR.MINOR.PATCH.
 MAJOR for changes that break saved settings or commands, MINOR for new features, PATCH for fixes.
 
+## 2.0.0 (2026-11-12)
+- Removed: tooltips following the cursor, and its `/trimtracker tips` command. That's outside what a tracker addon should do; Leatrix Plus and similar addons cover it.
+- Tracked quests are grouped under zone headers, with the zone you're in first. Click a header to collapse or expand that zone.
+- Collapsing a zone untracks its quests, and expanding it tracks them again. New quests in a collapsed zone stay hidden until you expand it. Collapsed zones are remembered per character.
+- Each zone header shows how many quests it holds.
+- `/trimtracker font <size>` makes the tracker text smaller than Edit Mode allows (6 to 20; `reset` goes back). Edit Mode's Text Size still works on top of it.
+- Tighter tracker: less space between quests (`/trimtracker spacing`, 0 to 10, default 5; Blizzard uses 10) and smaller quest map buttons lined up with each quest's title (`/trimtracker buttons`, 0.3 to 1, default 0.7).
+- `/trimtracker zones` turns the headers on or off. Turning them off tracks every collapsed quest again.
+- Options panel in Options > AddOns > Trim Tracker, with every setting. Its settings also turn up in the options search. `/trimtracker` on its own opens it; `/trimtracker help` lists the commands.
+- The quest timer box for timed quests is now its own widget: it no longer covers the first quests or reaches up under the minimap. Move it and size it in the options, or with `/trimtracker timer` (move), `/trimtracker timer <50-200>` (size) and `/trimtracker timer reset`.
+- The tracker now grows back when room frees up (a Details! window moved or closed), with no `/reload` needed.
+
 ## 1.0.3 (2026-11-12)
 - First release on CurseForge, uploaded automatically by the release pipeline. No changes to the addon itself.
 - New logo, also used as the project icon on GitLab, GitHub, Wago and CurseForge.
