@@ -6,10 +6,11 @@
 #   2. is built with the BigWigs packager (https://github.com/BigWigsMods/packager) into
 #      <Addon>-<tag>-forever.zip (addon folder at the root), and the packager publishes the GitHub
 #      release with release.json. Wago imports that GitHub release through its GitHub webhook.
+#      The packager also uploads the zip to CurseForge (toc "## X-Curse-Project-ID" + CF_API_TOKEN).
 #   3. gets a GitLab release with the same zip and release.json, for the WowUp Hub.
 #
 # CI/CD variables (masked, NOT protected): GH_API_TOKEN (GitHub token with Contents read/write on the
-# mirror). Without it, the GitHub steps are skipped.
+# mirror) and CF_API_TOKEN (CurseForge API token). Without one, that step is skipped.
 
 variables:
   GITHUB_REPO: "doc-biddle/$CI_PROJECT_NAME"
