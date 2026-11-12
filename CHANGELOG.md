@@ -3,6 +3,12 @@
 Versions follow semantic versioning: MAJOR.MINOR.PATCH.
 MAJOR for changes that break saved settings or commands, MINOR for new features, PATCH for fixes.
 
+## 1.0.1 (2026-11-12)
+- No changes to the addon itself: this release moves it to the BigWigs packager.
+- Releases are now published on GitLab (gitlab.com/docbiddle/TrimTracker) and GitHub (github.com/doc-biddle/TrimTracker), each with a `-forever.zip` and `release.json` for WowUp. Wago is next.
+- The version shown in the AddOn List now comes from the release tag.
+- Licensed under GPL-3.0.
+
 ## 1.0.0 (2026-11-12)
 - First release, renamed from Tracker Trim. `/trackertrim` still works as well as `/trimtracker`.
 - Hides the "All Objectives" header, caps the tracker's height above the Details! windows, and makes skill and interface tooltips follow the cursor.
