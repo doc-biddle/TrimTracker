@@ -43,6 +43,17 @@ package:
       fi
       bash /tmp/release.sh
 
+      # Wago imports GitHub releases from webhook events, but the packager publishes the release before
+      # attaching the zip. Update the release once more now that the files are there, so Wago gets a
+      # release event it can import from.
+      if [ -n "${GH_API_TOKEN:-}" ]; then
+        GH_API="https://api.github.com/repos/${GITHUB_REPO}/releases"
+        REL_ID=$(curl -sSf -H "Authorization: Bearer $GH_API_TOKEN" "$GH_API/tags/$CI_COMMIT_TAG" | jq -r .id)
+        curl -sSf -o /dev/null -X PATCH -H "Authorization: Bearer $GH_API_TOKEN" -H "Accept: application/vnd.github+json" \
+          --data '{"make_latest":"true"}' "$GH_API/$REL_ID"
+        echo "Sent a release update to GitHub for Wago."
+      fi
+
       ZIP=$(ls .release/*.zip | head -n 1); NAME=$(basename "$ZIP")
       TOC=$(ls *.toc | head -n 1)
       INTERFACE=$(sed -n 's/^## Interface: *\([0-9]*\).*/\1/p' "$TOC" | head -n 1)

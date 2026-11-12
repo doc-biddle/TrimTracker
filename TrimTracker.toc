@@ -5,6 +5,7 @@
 ## Author: Phillip
 ## X-License: GPL-3.0
 ## X-Website: https://gitlab.com/docbiddle/TrimTracker
+## X-Wago-ID: 5NRgLJ63
 ## Version: @project-version@
 ## SavedVariables: TrimTrackerDB
 
