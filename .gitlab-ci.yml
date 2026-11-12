@@ -16,7 +16,9 @@ variables:
   GIT_STRATEGY: clone
 
 github-sync:
-  image: alpine/git:latest
+  image:
+    name: alpine/git:latest
+    entrypoint: [""]
   rules:
     - if: '$CI_COMMIT_BRANCH == "main" && $GH_API_TOKEN'
   script:
