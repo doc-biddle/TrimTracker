@@ -1,21 +1,43 @@
-# Release pipeline, run when a version tag such as v1.2.3 is pushed:
-#  1. builds the addon zip with the BigWigs packager (https://github.com/BigWigsMods/packager),
-#  2. uploads it to Wago if the toc has "## X-Wago-ID" and the WAGO_API_TOKEN CI/CD variable is set,
-#  3. publishes a GitLab release with the zip and a BigWigs-style release.json, for the WowUp Hub.
+# GitLab is the main repository; GitHub (github.com/doc-biddle/<project>) is a mirror.
+#
+# github-sync: every push to main is copied to GitHub.
+# package:     a version tag such as v1.2.3
+#   1. is pushed to GitHub,
+#   2. is built with the BigWigs packager (https://github.com/BigWigsMods/packager), which uploads it
+#      to Wago (if the toc has "## X-Wago-ID") and publishes the GitHub release with release.json,
+#   3. gets a GitLab release with the same zip and release.json, for the WowUp Hub.
+#
+# CI/CD variables (masked, NOT protected): GH_API_TOKEN (GitHub token with Contents read/write on the
+# mirror), WAGO_API_TOKEN (Wago Addons API token). Without one, that step is skipped.
+
+variables:
+  GITHUB_REPO: "doc-biddle/$CI_PROJECT_NAME"
+  GIT_DEPTH: "0"
+  GIT_STRATEGY: clone
+
+github-sync:
+  image: alpine/git:latest
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" && $GH_API_TOKEN'
+  script:
+    - git push "https://x-access-token:${GH_API_TOKEN}@github.com/${GITHUB_REPO}.git" "HEAD:refs/heads/main"
 
 package:
   image: debian:bookworm-slim
   rules:
     - if: '$CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+/'
-  variables:
-    GIT_DEPTH: "0"
-    GIT_STRATEGY: clone
   script:
     - |
       set -euo pipefail
       apt-get update -qq
       apt-get install -y -qq --no-install-recommends bash git curl zip jq ca-certificates > /dev/null
       curl -sSfL https://raw.githubusercontent.com/BigWigsMods/packager/v2/release.sh -o /tmp/release.sh
+
+      # The packager publishes the GitHub release for the repo in the "origin" remote.
+      if [ -n "${GH_API_TOKEN:-}" ]; then
+        git push "https://x-access-token:${GH_API_TOKEN}@github.com/${GITHUB_REPO}.git" "refs/tags/$CI_COMMIT_TAG"
+        git remote set-url origin "https://github.com/${GITHUB_REPO}.git"
+      fi
       bash /tmp/release.sh
 
       ZIP=$(ls .release/*.zip | head -n 1); NAME=$(basename "$ZIP")
