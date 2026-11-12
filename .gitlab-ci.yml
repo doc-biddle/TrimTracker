@@ -1,0 +1,35 @@
+# Release pipeline, run when a version tag such as v1.2.3 is pushed:
+#  1. builds the addon zip with the BigWigs packager (https://github.com/BigWigsMods/packager),
+#  2. uploads it to Wago if the toc has "## X-Wago-ID" and the WAGO_API_TOKEN CI/CD variable is set,
+#  3. publishes a GitLab release with the zip and a BigWigs-style release.json, for the WowUp Hub.
+
+package:
+  image: debian:bookworm-slim
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+/'
+  variables:
+    GIT_DEPTH: "0"
+    GIT_STRATEGY: clone
+  script:
+    - |
+      set -euo pipefail
+      apt-get update -qq
+      apt-get install -y -qq --no-install-recommends bash git curl zip jq ca-certificates > /dev/null
+      curl -sSfL https://raw.githubusercontent.com/BigWigsMods/packager/v2/release.sh -o /tmp/release.sh
+      bash /tmp/release.sh
+
+      ZIP=$(ls .release/*.zip | head -n 1); NAME=$(basename "$ZIP")
+      TOC=$(ls *.toc | head -n 1)
+      INTERFACE=$(sed -n 's/^## Interface: *\([0-9]*\).*/\1/p' "$TOC" | head -n 1)
+      PKG="$CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/generic/$CI_PROJECT_NAME/$CI_COMMIT_TAG"
+      jq -n --arg n "$CI_PROJECT_NAME" --arg v "$CI_COMMIT_TAG" --arg f "$NAME" --argjson i "$INTERFACE" \
+        '{releases:[{name:$n,version:$v,filename:$f,nolib:false,metadata:[{flavor:"forever",interface:$i}]}]}' > release.json
+      curl -sSf -H "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file "$ZIP" "$PKG/$NAME"
+      curl -sSf -H "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file release.json "$PKG/release.json"
+
+      V="${CI_COMMIT_TAG#v}"
+      NOTES=$(awk -v v="$V" '$0 ~ "^## "v"( |$)" {f=1; next} /^## / {f=0} f' CHANGELOG.md)
+      jq -n --arg t "$CI_COMMIT_TAG" --arg name "$CI_PROJECT_NAME $V" --arg d "$NOTES" --arg z "$NAME" \
+        --arg zu "$PKG/$NAME" --arg ju "$PKG/release.json" \
+        '{tag_name:$t,name:$name,description:$d,assets:{links:[{name:$z,url:$zu,link_type:"package"},{name:"release.json",url:$ju,link_type:"other"}]}}' > payload.json
+      curl -sSf -H "JOB-TOKEN: $CI_JOB_TOKEN" -H "Content-Type: application/json" --data @payload.json "$CI_API_V4_URL/projects/$CI_PROJECT_ID/releases"

@@ -1,5 +1,10 @@
 package-as: TrimTracker
 
+manual-changelog:
+  filename: CHANGELOG.md
+  markup-type: markdown
+
 ignore:
   - README.md
   - .previews
+  - .gitlab-ci.yml
