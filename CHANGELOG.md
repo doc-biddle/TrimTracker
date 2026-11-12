@@ -3,6 +3,9 @@
 Versions follow semantic versioning: MAJOR.MINOR.PATCH.
 MAJOR for changes that break saved settings or commands, MINOR for new features, PATCH for fixes.
 
+## 2.0.2 (2026-11-12)
+- `/trimtracker` opens the options without a "tried to call the protected function" error from Blizzard's options window. Without the client call that allows that, it says where to find the options instead.
+
 ## 2.0.1 (2026-11-12)
 - The description in the AddOn List now covers what the addon does since 2.0.0. No changes to the addon itself.
 

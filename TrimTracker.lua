@@ -658,8 +658,13 @@ end
 
 local function OpenOptions()
 	if not category then BuildOptions() end
-	if category and Settings.OpenToCategory then
-		Settings.OpenToCategory(category.GetID and category:GetID() or category)
+	-- Opening Blizzard's options window from addon code makes the game treat the whole window as addon-driven, and
+	-- Blizzard's own checks inside it then get blocked and blamed on this addon. The client's own call avoids that;
+	-- without it, say where the options are instead of opening them.
+	if category and C_SettingsUtil and C_SettingsUtil.OpenSettingsPanel then
+		C_SettingsUtil.OpenSettingsPanel(category.GetID and category:GetID() or category)
+	else
+		print("Trim Tracker: the options are in Options > AddOns > Trim Tracker (or search the options for \"Trim Tracker\").")
 	end
 end
 
