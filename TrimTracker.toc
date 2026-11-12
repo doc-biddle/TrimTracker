@@ -1,7 +1,7 @@
 ## Interface: 16001
 ## Title: Trim Tracker |cff00aa00@project-version@|r
 ## IconTexture: Interface\Icons\INV_Misc_Note_01
-## Notes: Hides the quest tracker's "All Objectives" header and stops the tracker above the Details windows.
+## Notes: Tidies the quest tracker: collapsible zone headers, smaller text and spacing, a movable quest timer, and room kept above Details! windows.
 ## Author: Phillip
 ## X-License: GPL-3.0
 ## X-Website: https://gitlab.com/docbiddle/TrimTracker

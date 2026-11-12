@@ -3,6 +3,9 @@
 Versions follow semantic versioning: MAJOR.MINOR.PATCH.
 MAJOR for changes that break saved settings or commands, MINOR for new features, PATCH for fixes.
 
+## 2.0.1 (2026-11-12)
+- The description in the AddOn List now covers what the addon does since 2.0.0. No changes to the addon itself.
+
 ## 2.0.0 (2026-11-12)
 - Removed: tooltips following the cursor, and its `/trimtracker tips` command. That's outside what a tracker addon should do; Leatrix Plus and similar addons cover it.
 - Tracked quests are grouped under zone headers, with the zone you're in first. Click a header to collapse or expand that zone.
