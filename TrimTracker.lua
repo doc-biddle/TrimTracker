@@ -277,6 +277,26 @@ local function SizePOI(block)
 	poi:SetPoint("RIGHT", block.HeaderText, "TOPLEFT", -3 / scale, -LineFontSize() / 2 / scale)
 end
 
+-- How far a quest's text runs below the bottom of its block. Indenting a quest under its zone header makes it a
+-- little narrower than when Blizzard measured it, so a title that only just fitted wraps onto another line that
+-- the block's height doesn't include.
+local function Overflow(block)
+	local bottom = block:GetBottom()
+	if not bottom then return 0 end
+	local s = block:GetEffectiveScale()
+	local lowest = bottom * s
+	local function check(r)
+		if r and r:IsShown() then
+			local b = r:GetBottom()
+			if b then lowest = math.min(lowest, b * (r.GetEffectiveScale and r:GetEffectiveScale() or s)) end
+		end
+	end
+	for _, r in ipairs({ block:GetRegions() }) do check(r) end
+	for _, c in ipairs({ block:GetChildren() }) do check(c) end
+	local over = (bottom * s - lowest) / s
+	return over > 0.5 and math.ceil(over) or 0
+end
+
 local extra = 0   -- how much further down the quest list now ends than Blizzard planned
 
 local function LayoutZones()
@@ -319,7 +339,7 @@ local function LayoutZones()
 
 		holder:SetScale(tracker:GetEffectiveScale() / UIParent:GetEffectiveScale())
 		local headerH = HeaderHeight()
-		local ours, placed = 0, 0
+		local ours, placed, over = 0, 0, 0
 
 		-- How many quests each zone has under its header: tracked ones, or the ones collapsing hid.
 		local count = {}
@@ -344,6 +364,7 @@ local function LayoutZones()
 				h:Show()
 				ours = ours + headerH - gap
 				anchor, point, gap = h, "BOTTOM", -2
+				over = 0
 				for _, block in ipairs(blocks or {}) do
 					ours = ours - gap
 					placed = placed + 1
@@ -351,14 +372,16 @@ local function LayoutZones()
 					block:SetPoint("TOP", anchor, point, 0, gap)
 					block:SetPoint("LEFT", (block.offsetX or QT.blockOffsetX or 0) + INDENT, 0)
 					if not block.fixedWidth then block:SetPoint("RIGHT") end
-					anchor, point, gap = block, "BOTTOM", -DB().spacing
 					SizePOI(block)
+					over = Overflow(block)
+					anchor, point, gap = block, "BOTTOM", -DB().spacing - over
 				end
 				gap = gap - HEADER_GAP
 			end
 		end
 		-- How much further down the quests now end than where Blizzard put them.
 		if inline and placed > 0 then
+			ours = ours + over   -- the last quest's wrapped line
 			local blizz = -(prev and (QT.fromBlockOffsetY or -10) or (QT.fromHeaderOffsetY or -10)) - (placed - 1) * (QT.fromBlockOffsetY or -10)
 			extra = math.max(0, ours - blizz)
 		end

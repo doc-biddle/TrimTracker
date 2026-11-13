@@ -3,6 +3,9 @@
 Versions follow semantic versioning: MAJOR.MINOR.PATCH.
 MAJOR for changes that break saved settings or commands, MINOR for new features, PATCH for fixes.
 
+## 2.0.3 (2026-11-13)
+- A quest title that wraps onto a second line under its zone header no longer overlaps the quest below it.
+
 ## 2.0.2 (2026-11-12)
 - `/trimtracker` opens the options without a "tried to call the protected function" error from Blizzard's options window. Without the client call that allows that, it says where to find the options instead.
 
