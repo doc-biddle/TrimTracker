@@ -7,9 +7,10 @@
 #      <Addon>-<tag>-forever.zip (addon folder at the root), which the packager uploads to CurseForge
 #      (toc "## X-Curse-Project-ID" + CF_API_TOKEN).
 #   3. gets a GitLab release with the zip and release.json, for the WowUp Hub.
-#   4. gets a GitHub release with the same files. It is made as a draft, the files are attached, and
-#      only then is it published, so Wago (which imports GitHub releases through its GitHub webhook)
-#      gets one notice for a release that already has its files, and imports it once.
+#   4. gets a GitHub release with the same files. It is made as a draft, the files are attached, it
+#      is published, and 3 minutes later it is saved once more, unchanged. Wago (which imports GitHub
+#      releases through its GitHub webhook) ignores the publish of a release that began as a draft, but
+#      imports on that later save, once, with the files already in place.
 #
 # CI/CD variables (masked, NOT protected): GH_API_TOKEN (GitHub token with Contents read/write on the
 # mirror) and CF_API_TOKEN (CurseForge API token). Without one, that step is skipped.
@@ -64,8 +65,9 @@ package:
         '{tag_name:$t,name:$name,description:$d,assets:{links:[{name:$z,url:$zu,link_type:"package"},{name:"release.json",url:$ju,link_type:"other"}]}}' > payload.json
       curl -sSf -H "JOB-TOKEN: $CI_JOB_TOKEN" -H "Content-Type: application/json" --data @payload.json "$CI_API_V4_URL/projects/$CI_PROJECT_ID/releases"
 
-      # GitHub release: a draft with the zip and release.json attached, then published. Wago imports it
-      # when it is published. The wait keeps Wago's notice about the draft well apart from that one.
+      # GitHub release: a draft with the zip and release.json attached, then published, then saved again
+      # unchanged after 3 minutes. Wago doesn't import on the publish of a release that started as a
+      # draft (seen with HoverWise 1.1.2); it does import on the later save.
       if [ -n "${GH_API_TOKEN:-}" ]; then
         GH_API="https://api.github.com/repos/${GITHUB_REPO}/releases"
         GH_UPLOADS="https://uploads.github.com/repos/${GITHUB_REPO}/releases"
@@ -78,7 +80,9 @@ package:
             --data-binary @"$F" "$GH_UPLOADS/$REL_ID/assets?name=$(basename "$F")"
           echo "Attached $(basename "$F") to the draft GitHub release."
         done
-        sleep 60
         curl -sSf -o /dev/null -X PATCH -H "$AUTH" -H "$ACCEPT" --data '{"draft":false,"make_latest":"true"}' "$GH_API/$REL_ID"
         echo "Published the GitHub release: https://github.com/${GITHUB_REPO}/releases/tag/$CI_COMMIT_TAG"
+        sleep 180
+        curl -sSf -o /dev/null -X PATCH -H "$AUTH" -H "$ACCEPT" --data '{"make_latest":"true"}' "$GH_API/$REL_ID"
+        echo "Saved the GitHub release again, for Wago."
       fi
