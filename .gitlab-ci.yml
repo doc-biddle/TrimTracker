@@ -4,10 +4,12 @@
 # package:     a version tag such as v1.2.3
 #   1. is pushed to GitHub,
 #   2. is built with the BigWigs packager (https://github.com/BigWigsMods/packager) into
-#      <Addon>-<tag>-forever.zip (addon folder at the root), and the packager publishes the GitHub
-#      release with release.json. Wago imports that GitHub release through its GitHub webhook.
-#      The packager also uploads the zip to CurseForge (toc "## X-Curse-Project-ID" + CF_API_TOKEN).
-#   3. gets a GitLab release with the same zip and release.json, for the WowUp Hub.
+#      <Addon>-<tag>-forever.zip (addon folder at the root), which the packager uploads to CurseForge
+#      (toc "## X-Curse-Project-ID" + CF_API_TOKEN).
+#   3. gets a GitLab release with the zip and release.json, for the WowUp Hub.
+#   4. gets a GitHub release with the same files. It is made as a draft, the files are attached, and
+#      only then is it published, so Wago (which imports GitHub releases through its GitHub webhook)
+#      gets one notice for a release that already has its files, and imports it once.
 #
 # CI/CD variables (masked, NOT protected): GH_API_TOKEN (GitHub token with Contents read/write on the
 # mirror) and CF_API_TOKEN (CurseForge API token). Without one, that step is skipped.
@@ -37,24 +39,14 @@ package:
       apt-get install -y -qq --no-install-recommends bash git curl zip jq ca-certificates > /dev/null
       curl -sSfL https://raw.githubusercontent.com/BigWigsMods/packager/v2/release.sh -o /tmp/release.sh
 
-      # The packager publishes the GitHub release for the repo in the "origin" remote.
+      # The tag goes to GitHub first, for the GitHub release below.
       if [ -n "${GH_API_TOKEN:-}" ]; then
         git push "https://x-access-token:${GH_API_TOKEN}@github.com/${GITHUB_REPO}.git" "refs/tags/$CI_COMMIT_TAG"
-        git remote set-url origin "https://github.com/${GITHUB_REPO}.git"
       fi
-      bash /tmp/release.sh
-
-      # Wago imports GitHub releases from webhook events, but the packager publishes the release before
-      # attaching the zip, and Wago seems to ignore further events for a release that arrive right after
-      # the first one. Wait a few minutes, then update the release so Wago gets an event with the files.
-      if [ -n "${GH_API_TOKEN:-}" ]; then
-        sleep 180
-        GH_API="https://api.github.com/repos/${GITHUB_REPO}/releases"
-        REL_ID=$(curl -sSf -H "Authorization: Bearer $GH_API_TOKEN" "$GH_API/tags/$CI_COMMIT_TAG" | jq -r .id)
-        curl -sSf -o /dev/null -X PATCH -H "Authorization: Bearer $GH_API_TOKEN" -H "Accept: application/vnd.github+json" \
-          --data '{"make_latest":"true"}' "$GH_API/$REL_ID"
-        echo "Sent a release update to GitHub for Wago."
-      fi
+      # The packager runs without a GitHub token, so it builds the zip and uploads it to CurseForge but
+      # makes no GitHub release: its release is published before the zip is attached, and the extra
+      # notice that took to reach Wago made Wago import some releases twice.
+      env -u GH_API_TOKEN -u GITHUB_API_TOKEN -u GITHUB_OAUTH bash /tmp/release.sh
 
       ZIP=$(ls .release/*.zip | head -n 1); NAME=$(basename "$ZIP")
       TOC=$(ls *.toc | head -n 1)
@@ -71,3 +63,22 @@ package:
         --arg zu "$PKG/$NAME" --arg ju "$PKG/release.json" \
         '{tag_name:$t,name:$name,description:$d,assets:{links:[{name:$z,url:$zu,link_type:"package"},{name:"release.json",url:$ju,link_type:"other"}]}}' > payload.json
       curl -sSf -H "JOB-TOKEN: $CI_JOB_TOKEN" -H "Content-Type: application/json" --data @payload.json "$CI_API_V4_URL/projects/$CI_PROJECT_ID/releases"
+
+      # GitHub release: a draft with the zip and release.json attached, then published. Wago imports it
+      # when it is published. The wait keeps Wago's notice about the draft well apart from that one.
+      if [ -n "${GH_API_TOKEN:-}" ]; then
+        GH_API="https://api.github.com/repos/${GITHUB_REPO}/releases"
+        GH_UPLOADS="https://uploads.github.com/repos/${GITHUB_REPO}/releases"
+        AUTH="Authorization: Bearer $GH_API_TOKEN"
+        ACCEPT="Accept: application/vnd.github+json"
+        jq -n --arg t "$CI_COMMIT_TAG" --arg b "$NOTES" '{tag_name:$t,name:$t,body:$b,draft:true}' > gh_release.json
+        REL_ID=$(curl -sSf -H "$AUTH" -H "$ACCEPT" --data @gh_release.json "$GH_API" | jq -r .id)
+        for F in "$ZIP" release.json; do
+          curl -sSf -o /dev/null -H "$AUTH" -H "$ACCEPT" -H "Content-Type: application/octet-stream" \
+            --data-binary @"$F" "$GH_UPLOADS/$REL_ID/assets?name=$(basename "$F")"
+          echo "Attached $(basename "$F") to the draft GitHub release."
+        done
+        sleep 60
+        curl -sSf -o /dev/null -X PATCH -H "$AUTH" -H "$ACCEPT" --data '{"draft":false,"make_latest":"true"}' "$GH_API/$REL_ID"
+        echo "Published the GitHub release: https://github.com/${GITHUB_REPO}/releases/tag/$CI_COMMIT_TAG"
+      fi
