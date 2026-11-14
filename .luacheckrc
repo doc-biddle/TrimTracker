@@ -1,0 +1,56 @@
+-- Made by tests/make_client_api.py from /biddle apidump, client build 1.60.1.70938. Do not edit.
+std = "lua51"
+max_line_length = false
+exclude_files = { "tests/", ".release/" }
+ignore = { "212" }   -- unused arguments (event handlers and hooks get fixed argument lists)
+globals = {
+	"BiddleUtilitiesDB",
+	"HoverWiseDB",
+	"RestedWatchDB",
+	"SLASH_HOVERWISE1",
+	"SLASH_RESTEDWATCH1",
+	"SLASH_TRIMTRACKER1",
+	"SLASH_TRIMTRACKER2",
+	"SlashCmdList",
+	"TrimTrackerDB",
+}
+read_globals = {
+	C_QuestLog = { fields = { "AddQuestWatch", "GetInfo", "GetLogIndexForQuestID", "GetNumQuestLogEntries", "GetNumQuestWatches", "GetQuestIDForQuestWatchIndex", "RemoveQuestWatch" } },
+	C_SettingsUtil = { fields = { "OpenSettingsPanel" } },
+	C_Timer = { fields = { "After", "NewTicker" } },
+	"CreateFrame",
+	"CreateSettingsButtonInitializer",
+	"CreateSettingsListSectionHeaderInitializer",
+	"EditModeManagerFrame",
+	"GameFontHighlight",
+	"GameTooltip",
+	"GetRealZoneText",
+	"GetRealmName",
+	"GetTime",
+	"InCombatLockdown",
+	"MinimalSliderWithSteppersMixin",
+	"MinimapCluster",
+	"OTHER",
+	"ObjectiveTrackerFrame",
+	"QuestObjectiveTracker",
+	"QuestTimerFrame",
+	"Settings",
+	"UIParent",
+	"UnitName",
+	"WorldFrame",
+	"date",
+	"debugstack",
+	"format",
+	"geterrorhandler",
+	"hooksecurefunc",
+	"issecretvalue",
+	"seterrorhandler",
+	"strfind",
+	"strmatch",
+	"strsplit",
+	"time",
+	"tinsert",
+	"tremove",
+	"wipe",
+	-- Not in this client: used only after checking they exist (other client versions).
+}

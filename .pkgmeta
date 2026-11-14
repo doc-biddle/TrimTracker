@@ -9,3 +9,5 @@ ignore:
   - README.md
   - .previews
   - .gitlab-ci.yml
+  - .luacheckrc
+  - tests
