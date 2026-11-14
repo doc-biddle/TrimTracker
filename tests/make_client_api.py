@@ -22,7 +22,7 @@ FALLBACKS = {
     "GetContainerItemID", "GetContainerNumSlots", "GetItemCooldown", "UnitBuff", "GetMaxLevelForPlayerExpansion",
     "GetFactionInfo", "GetNumFactions", "CreateSettingsListSectionHeaderInitializer", "CUSTOM_CLASS_COLORS",
     "LibStub", "Titan_G", "Titan_Menu", "SPELL_CAST_CHANNELED", "UNIT_SKINNABLE_LEATHER", "GameTooltip_SetDefaultAnchor",
-    "BackdropTemplateMixin", "EditModeManagerFrame", "QuestTimerFrame", "PlayerHasToy",
+    "BackdropTemplateMixin", "EditModeManagerFrame", "QuestTimerFrame", "PlayerHasToy", "GetNumSkillLines", "GetSkillLineInfo",
 }
 # Globals the addons set themselves (saved variables and slash commands).
 WRITES = ["HoverWiseDB", "RestedWatchDB", "TrimTrackerDB", "BiddleUtilitiesDB", "SlashCmdList",
