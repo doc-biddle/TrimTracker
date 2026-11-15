@@ -57,6 +57,14 @@ local function World(opts)
 	for i, b in ipairs(blocks) do b.nextBlock = blocks[i + 1] end
 	QT.firstBlock = blocks[1]
 	if opts.wrapFirstTitle then blocks[1].HeaderText.__bottom = 100 - opts.wrapFirstTitle end
+	if opts.wrapFirstLine then
+		-- A one-line-tall line frame whose text has wrapped below it (a quest description running to three lines).
+		local line = game.CreateFrame("Frame")
+		line.Text = game.CreateFrame("FontString")
+		line.__bottom, line.Text.__bottom = 100, 100 - opts.wrapFirstLine
+		line.__regions = { line.Text }
+		blocks[1].__children = { line }
+	end
 
 	h.Load("TrimTracker.lua", "TrimTracker")
 	h.Fire("ADDON_LOADED", "TrimTracker")
@@ -126,6 +134,15 @@ function cases.wrapped_title_pushes_the_next_quest_down()
 	local _, h2, wrapped = World({ wrapFirstTitle = 12 })
 	wrapped.Layout()
 	T.eq(GapBelowFirst(wrapped), GapBelowFirst(plain) - 12, "gap below a quest whose title wraps by 12")
+	T.clean(h); T.clean(h2)
+end
+
+function cases.wrapped_description_text_inside_a_line_pushes_the_next_quest_down()
+	local _, h, plain = World()
+	plain.Layout()
+	local _, h2, wrapped = World({ wrapFirstLine = 26 })
+	wrapped.Layout()
+	T.eq(GapBelowFirst(wrapped), GapBelowFirst(plain) - 26, "gap below a quest whose description wraps past its line")
 	T.clean(h); T.clean(h2)
 end
 

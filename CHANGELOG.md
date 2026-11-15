@@ -3,6 +3,9 @@
 Versions follow semantic versioning: MAJOR.MINOR.PATCH.
 MAJOR for changes that break saved settings or commands, MINOR for new features, PATCH for fixes.
 
+## 2.0.4 (2026-11-15)
+- A quest whose description wraps onto several lines (a quest with no objectives listed, such as "A Letter Undelivered") no longer overlaps the quest below it.
+
 ## 2.0.3 (2026-11-13)
 - A quest title that wraps onto a second line under its zone header no longer overlaps the quest below it.
 

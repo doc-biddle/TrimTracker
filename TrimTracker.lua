@@ -285,14 +285,19 @@ local function Overflow(block)
 	if not bottom then return 0 end
 	local s = block:GetEffectiveScale()
 	local lowest = bottom * s
-	local function check(r)
-		if r and r:IsShown() then
-			local b = r:GetBottom()
-			if b then lowest = math.min(lowest, b * (r.GetEffectiveScale and r:GetEffectiveScale() or s)) end
+	-- The block's own text, its lines, and the text inside each line: a line's text can wrap further than the line
+	-- frame Blizzard sized for it (a quest's description runs to three lines while its line stays one line tall).
+	local function check(r, depth)
+		if not (r and r:IsShown()) then return end
+		local b = r:GetBottom()
+		if b then lowest = math.min(lowest, b * (r.GetEffectiveScale and r:GetEffectiveScale() or s)) end
+		if depth > 0 then
+			if r.GetRegions then for _, sub in ipairs({ r:GetRegions() }) do check(sub, depth - 1) end end
+			if r.GetChildren then for _, sub in ipairs({ r:GetChildren() }) do check(sub, depth - 1) end end
 		end
 	end
-	for _, r in ipairs({ block:GetRegions() }) do check(r) end
-	for _, c in ipairs({ block:GetChildren() }) do check(c) end
+	for _, r in ipairs({ block:GetRegions() }) do check(r, 0) end
+	for _, c in ipairs({ block:GetChildren() }) do check(c, 1) end
 	local over = (bottom * s - lowest) / s
 	return over > 0.5 and math.ceil(over) or 0
 end
