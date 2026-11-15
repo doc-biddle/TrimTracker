@@ -186,8 +186,12 @@ local function QuestZones()
 		if not inLog[id] and C_QuestLog.GetLogIndexForQuestID(id) == nil then zdb.zoneOf[id] = nil end
 	end
 	for zone, ids in pairs(zdb.collapsed) do
+		-- Drop quests that left the log, and quests listed twice (2.0.4 and earlier listed a quest again each time it
+		-- made progress).
+		local listed = {}
 		for i = #ids, 1, -1 do
-			if C_QuestLog.GetLogIndexForQuestID(ids[i]) == nil then table.remove(ids, i) end
+			local id = ids[i]
+			if listed[id] or C_QuestLog.GetLogIndexForQuestID(id) == nil then table.remove(ids, i) else listed[id] = true end
 		end
 		if #ids == 0 then zdb.collapsed[zone] = nil end
 	end
@@ -203,6 +207,12 @@ local function ZoneOf(questID)
 	return ZoneDB().zoneOf[questID] or OTHER
 end
 
+-- Adds a quest to a collapsed zone's list, once.
+local function Remember(ids, questID)
+	for _, id in ipairs(ids) do if id == questID then return end end
+	ids[#ids + 1] = questID
+end
+
 local function SetCollapsed(zone, collapse)
 	local zdb = ZoneDB()
 	changing = true
@@ -211,7 +221,7 @@ local function SetCollapsed(zone, collapse)
 		for i = C_QuestLog.GetNumQuestWatches(), 1, -1 do
 			local id = C_QuestLog.GetQuestIDForQuestWatchIndex(i)
 			if id and ZoneOf(id) == zone then
-				ids[#ids + 1] = id
+				Remember(ids, id)
 				C_QuestLog.RemoveQuestWatch(id)
 			end
 		end
@@ -539,7 +549,7 @@ events:SetScript("OnEvent", function(_, event, questID, added)
 		local zone = ZoneOf(questID)
 		local ids = ZoneDB().collapsed[zone]
 		if ids then
-			ids[#ids + 1] = questID
+			Remember(ids, questID)   -- the game tracks it again on every bit of progress: listed once all the same
 			changing = true
 			C_QuestLog.RemoveQuestWatch(questID)
 			changing = false

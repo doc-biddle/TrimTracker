@@ -152,4 +152,33 @@ function cases.slash_command_runs()
 	T.clean(h)
 end
 
+function cases.collapsed_zone_counts_a_quest_once_however_often_it_progresses()
+	local _, h, w = World()
+	w.Layout()
+	for _, hdr in ipairs(w.Headers()) do if hdr.zone == "The Barrens" then FakeWoW.RunScript(hdr, "OnClick") end end
+	for _ = 1, 3 do   -- quest 2 makes progress three times; the game tracks it again each time
+		table.insert(w.watched, 2)
+		h.Fire("QUEST_WATCH_LIST_CHANGED", 2, true)
+	end
+	w.Layout()
+	T.has(HeaderText(w, "The Barrens"), "(2)", "Barrens header")
+	T.eq(#w.watched, 1, "and its quests stay untracked")
+	T.clean(h)
+end
+
+function cases.counts_saved_too_high_by_an_earlier_version_correct_themselves()
+	local _, h, w = World()
+	w.Layout()
+	for _, hdr in ipairs(w.Headers()) do if hdr.zone == "The Barrens" then FakeWoW.RunScript(hdr, "OnClick") end end
+	local ids = h.Env().TrimTrackerDB.zones["Mara-Forever"].collapsed["The Barrens"]
+	ids[#ids + 1] = 2; ids[#ids + 1] = 2; ids[#ids + 1] = 1
+	w.Layout()
+	T.has(HeaderText(w, "The Barrens"), "(2)", "Barrens header")
+	local barrens
+	for _, hdr in ipairs(w.Headers()) do if hdr.zone == "The Barrens" then barrens = hdr end end
+	FakeWoW.RunScript(barrens, "OnClick")
+	T.eq(#w.watched, 3, "expanding tracks each quest once")
+	T.clean(h)
+end
+
 return cases
