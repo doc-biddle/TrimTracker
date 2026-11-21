@@ -37,6 +37,20 @@ local function GameRealm()
 	return realm
 end
 
+-- The realm already in the saved data, for when no realm has been seen since the hotfix: the one this character
+-- is saved under, or else the one realm every saved character shares. Nil if that can't be told.
+local function SavedRealm(list, name)
+	local only
+	for key in pairs(list) do
+		local n, realm = key:match("^(.-)%-(.+)$")
+		if realm then
+			if n == name then return realm end
+			if only and only ~= realm then only = false elseif only == nil then only = realm end
+		end
+	end
+	return only or nil
+end
+
 -- Per-character zone state: which zones are collapsed (and the quests that were untracked to collapse them),
 -- plus the last known zone of each quest, for quests whose quest log header is collapsed.
 local function ZoneDB()
@@ -48,7 +62,9 @@ local function ZoneDB()
 	if realm then
 		db.realmOf[name], db.realm = realm, realm
 	else
-		realm = db.realmOf[name] or db.realm or ""
+		realm = db.realmOf[name] or db.realm or SavedRealm(db.zones, name)
+		if realm then db.realmOf[name], db.realm = realm, db.realm or realm end
+		realm = realm or ""
 	end
 	local key = name .. "-" .. realm
 	local stray = realm ~= "" and db.zones[name .. "-"]

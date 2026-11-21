@@ -3,6 +3,9 @@
 Versions follow semantic versioning: MAJOR.MINOR.PATCH.
 MAJOR for changes that break saved settings or commands, MINOR for new features, PATCH for fixes.
 
+## 2.0.7 (2026-11-21)
+- 2.0.6 only knew a realm it had seen itself, and since the hotfix it never sees one, so collapsed zones were still saved under a blank realm. It now takes the realm from the characters already saved, and folds the blank-realm entries back in.
+
 ## 2.0.6 (2026-11-21)
 - Works with Forever's anti-layer-hopping hotfix, which hides the realm name from addons. Collapsed zones are no longer forgotten. The last realm seen is used instead, and zones saved under a blank realm by earlier versions are folded back in.
 

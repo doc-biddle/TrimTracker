@@ -215,4 +215,17 @@ function cases.a_secret_realm_name_uses_the_last_realm_seen()
 	T.clean(h)
 end
 
+function cases.with_no_realm_seen_the_saved_realm_is_used()
+	local saved = { zones = {
+		["Mara-"] = { collapsed = {}, zoneOf = { [3] = "Wailing Caverns" } },
+		["Mara-Forever"] = { collapsed = {}, zoneOf = { [1] = "The Barrens" } },
+	} }
+	local _, h = World({ realm = "", saved = saved })
+	local db = h.Env().TrimTrackerDB
+	T.ok(not db.zones["Mara-"], "blank-realm entry folded in")
+	T.eq(db.zones["Mara-Forever"].zoneOf[3], "Wailing Caverns", "its zones moved over")
+	T.eq(db.realm, "Forever", "realm remembered")
+	T.clean(h)
+end
+
 return cases
