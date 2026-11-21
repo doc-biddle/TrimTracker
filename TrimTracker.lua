@@ -29,11 +29,37 @@ local function DB()
 	return db
 end
 
+-- The realm name, or nil when the game won't say. Since the Nov 2026 anti-layer-hopping hotfix Forever returns
+-- an empty string (or a secret value) for it, so the last realm seen is remembered and used instead.
+local function GameRealm()
+	local ok, realm = pcall(GetRealmName)
+	if not ok or (issecretvalue and issecretvalue(realm)) or type(realm) ~= "string" or realm == "" then return nil end
+	return realm
+end
+
 -- Per-character zone state: which zones are collapsed (and the quests that were untracked to collapse them),
 -- plus the last known zone of each quest, for quests whose quest log header is collapsed.
 local function ZoneDB()
 	local db = DB()
-	local key = (UnitName("player") or "?") .. "-" .. (GetRealmName() or "")
+	-- Use the last realm seen when the game won't say, and fold zones saved under a blank realm by an earlier
+	-- version into the right entry once a realm is known.
+	local name, realm = UnitName("player") or "?", GameRealm()
+	db.realmOf = db.realmOf or {}
+	if realm then
+		db.realmOf[name], db.realm = realm, realm
+	else
+		realm = db.realmOf[name] or db.realm or ""
+	end
+	local key = name .. "-" .. realm
+	local stray = realm ~= "" and db.zones[name .. "-"]
+	if stray then
+		local z = db.zones[key] or {}
+		for part, list in pairs(stray) do
+			z[part] = z[part] or {}
+			for k, v in pairs(list) do z[part][k] = v end
+		end
+		db.zones[key], db.zones[name .. "-"] = z, nil
+	end
 	local z = db.zones[key] or {}
 	db.zones[key] = z
 	z.collapsed = z.collapsed or {}

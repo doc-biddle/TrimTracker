@@ -3,6 +3,9 @@
 Versions follow semantic versioning: MAJOR.MINOR.PATCH.
 MAJOR for changes that break saved settings or commands, MINOR for new features, PATCH for fixes.
 
+## 2.0.6 (2026-11-21)
+- Works with Forever's anti-layer-hopping hotfix, which hides the realm name from addons. Collapsed zones are no longer forgotten. The last realm seen is used instead, and zones saved under a blank realm by earlier versions are folded back in.
+
 ## 2.0.5 (2026-11-15)
 - A collapsed zone's header no longer counts a quest again each time that quest makes progress ("The Barrens (5)" for two quests). Counts that were already too high correct themselves.
 

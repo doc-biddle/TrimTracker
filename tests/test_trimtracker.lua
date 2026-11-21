@@ -30,7 +30,13 @@ local function World(opts)
 		AddQuestWatch = function(id) table.insert(watched, id) end,
 	}
 	game.UnitName = function() return "Mara" end
-	game.GetRealmName = function() return "Forever" end
+	game.GetRealmName = function() return opts.realm or "Forever" end
+	if opts.secretRealm then
+		local secret = {}
+		game.GetRealmName = function() return secret end
+		game.issecretvalue = function(v) return v == secret end
+	end
+	if opts.saved then game.TrimTrackerDB = opts.saved end
 	game.GetRealZoneText = function() return "The Barrens" end
 	game.InCombatLockdown = function() return false end
 
@@ -178,6 +184,34 @@ function cases.counts_saved_too_high_by_an_earlier_version_correct_themselves()
 	for _, hdr in ipairs(w.Headers()) do if hdr.zone == "The Barrens" then barrens = hdr end end
 	FakeWoW.RunScript(barrens, "OnClick")
 	T.eq(#w.watched, 3, "expanding tracks each quest once")
+	T.clean(h)
+end
+
+function cases.a_blank_realm_name_uses_the_last_realm_seen()
+	local _, h = World({ realm = "", saved = { realm = "Forever", zones = {} } })
+	local zones = h.Env().TrimTrackerDB.zones
+	T.ok(zones["Mara-Forever"], "zones kept under the known realm")
+	T.ok(not zones["Mara-"], "nothing saved under a blank realm")
+	T.clean(h)
+end
+
+function cases.zones_saved_under_a_blank_realm_are_folded_in()
+	local saved = { zones = {
+		["Mara-"] = { collapsed = { ["Wailing Caverns"] = { 3 } }, zoneOf = { [3] = "Wailing Caverns" } },
+		["Mara-Forever"] = { collapsed = {}, zoneOf = { [1] = "The Barrens" } },
+	} }
+	local _, h = World({ saved = saved })
+	local zones = h.Env().TrimTrackerDB.zones
+	T.ok(not zones["Mara-"], "blank-realm entry removed")
+	T.eq(zones["Mara-Forever"].zoneOf[3], "Wailing Caverns", "its zones moved over")
+	T.eq(zones["Mara-Forever"].zoneOf[1], "The Barrens", "and the existing ones kept")
+	T.ok(zones["Mara-Forever"].collapsed["Wailing Caverns"], "collapsed zone moved over")
+	T.clean(h)
+end
+
+function cases.a_secret_realm_name_uses_the_last_realm_seen()
+	local _, h = World({ secretRealm = true, saved = { realm = "Forever", zones = {} } })
+	T.ok(h.Env().TrimTrackerDB.zones["Mara-Forever"], "zones kept under the known realm")
 	T.clean(h)
 end
 
